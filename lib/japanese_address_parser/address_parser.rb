@@ -5,27 +5,27 @@ require_relative './models/prefecture'
 
 module JapaneseAddressParser
   module AddressParser
-    def call(normalized:, full_address:)
+    def call(normalized:, full_address:, addr: '')
       prefecture = ::JapaneseAddressParser::Models::Prefecture.all.find { |candidate| normalized.start_with?(candidate.name) }
 
-      return _build_address(full_address: full_address) if prefecture.nil?
+      return _build_address(full_address: full_address, addr: addr) if prefecture.nil?
 
       city_and_after = normalized.delete_prefix(prefecture.name)
       city = prefecture.cities.find { |candidate| city_and_after.start_with?(candidate.name) }
 
-      return _build_address(full_address: full_address, prefecture: prefecture) if city.nil?
+      return _build_address(full_address: full_address, prefecture: prefecture, addr: addr) if city.nil?
 
       town_and_after = city_and_after.delete_prefix(city.name)
 
-      return _build_address(full_address: full_address, prefecture: prefecture, city: city) if town_and_after.empty?
+      return _build_address(full_address: full_address, prefecture: prefecture, city: city, addr: addr) if town_and_after.empty?
 
       town = city.towns.find { |candidate| town_and_after == candidate.name }
 
-      _build_address(full_address: full_address, prefecture: prefecture, city: city, town: town)
+      _build_address(full_address: full_address, prefecture: prefecture, city: city, town: town, addr: addr)
     end
 
-    def _build_address(full_address:, prefecture: nil, city: nil, town: nil)
-      ::JapaneseAddressParser::Models::Address.new(full_address: full_address, prefecture: prefecture, city: city, town: town)
+    def _build_address(full_address:, prefecture: nil, city: nil, town: nil, addr: '')
+      ::JapaneseAddressParser::Models::Address.new(full_address: full_address, prefecture: prefecture, city: city, town: town, addr: addr)
     end
 
     module_function :call, :_build_address
